@@ -198,25 +198,29 @@
     }
   ],
   "controller": {
-    "id": "Simple_Flight_Controller",
-    "airframe-setup": "quadrotor-x",
-    "type": "simple-flight-api",
-    "simple-flight-api-settings": {
-      "actuator-order": [
-        {
-          "id": "Prop_FR_actuator"
-        },
-        {
-          "id": "Prop_RL_actuator"
-        },
-        {
-          "id": "Prop_FL_actuator"
-        },
-        {
-          "id": "Prop_RR_actuator"
-        }
-      ]
-    }
+      "id": "Manual_Controller",
+      "type": "manual-controller-api",
+
+      "manual-controller-api-settings": {
+          "actuator-order": [
+              {
+                  "id": "Prop_FR_actuator",
+                  "initial-value": 0.0
+              },
+              {
+                  "id": "Prop_RL_actuator",
+                  "initial-value": 0.0
+              },
+              {
+                  "id": "Prop_FL_actuator",
+                  "initial-value": 0.0
+              },
+              {
+                  "id": "Prop_RR_actuator",
+                  "initial-value": 0.0
+              }
+          ]
+      }
   },
   "actuators": [
     {

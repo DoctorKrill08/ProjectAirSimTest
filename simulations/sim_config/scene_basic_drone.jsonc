@@ -15,7 +15,7 @@
     "type": "steppable",
     "step-ns": 3000000,
     "real-time-update-rate": 3000000,
-    "pause-on-start": false
+    "pause-on-start": true
   },
   "home-geo-point": {
     "latitude": 47.641468,
