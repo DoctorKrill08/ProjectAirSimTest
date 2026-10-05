@@ -1,0 +1,35 @@
+13:31:42:099 [INFO] Connecting to simulation server at 127.0.0.1
+13:31:42:108 [INFO] Connection opened.
+13:31:42:109 [INFO] Loading scene config: scene_basic_drone.jsonc
+13:31:43:538 [INFO] Getting the list of available topic info from the sim server...
+13:31:43:550 [INFO] Successfully received topic info list.
+13:31:45:551 [INFO] World object updated for the loaded scene '/Sim/SceneBasicDrone'. Note: Any previous Drone object instances may no longer be valid.
+13:31:45:552 [INFO] Trajectory 'null_trajectory' imported successfully.
+13:31:45:553 [INFO] Initalizing Drone 'Drone1'...
+13:31:45:554 [INFO] -------------------------------------------------
+13:31:45:554 [INFO] The following topics can be subscribed to for robot 'Drone1':
+13:31:45:555 [INFO]     sensors["Chase"]["scene_camera"]
+13:31:45:555 [INFO]     sensors["Chase"]["scene_camera_info"]
+13:31:45:555 [INFO]     sensors["DownCamera"]["scene_camera"]
+13:31:45:556 [INFO]     sensors["DownCamera"]["scene_camera_info"]
+13:31:45:556 [INFO]     sensors["DownCamera"]["depth_camera"]
+13:31:45:557 [INFO]     sensors["DownCamera"]["depth_camera_info"]
+13:31:45:557 [INFO]     sensors["IMU1"]["imu_kinematics"]
+13:31:45:557 [INFO]     sensors["GPS"]["gps"]
+13:31:45:558 [INFO]     sensors["Barometer"]["barometer"]
+13:31:45:558 [INFO]     sensors["Magnetometer"]["magnetometer"]
+13:31:45:558 [INFO]     robot_info["actual_pose"]
+13:31:45:559 [INFO]     robot_info["collision_info"]
+13:31:45:559 [INFO]     robot_info["rotor_info"]
+13:31:45:559 [INFO] -------------------------------------------------
+13:31:45:560 [INFO] Drone 'Drone1' initialized for World scene '/Sim/SceneBasicDrone'
+13:31:45:563 [INFO] takeoff_async: starting
+13:31:48:471 [INFO] takeoff_async: completed
+13:31:48:471 [INFO] Move-Up invoked
+13:31:52:597 [INFO] Move-Up completed
+13:31:52:598 [INFO] Move-Down invoked
+13:31:56:728 [INFO] Move-Down completed
+13:31:56:729 [INFO] land_async: starting
+13:32:04:433 [INFO] land_async: completed
+13:32:04:435 [INFO] Disconnecting from simulation server...
+13:32:04:466 [INFO] Disconnected.
