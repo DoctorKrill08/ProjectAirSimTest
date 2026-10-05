@@ -1,3 +1,6 @@
+import asyncio
+
+
 from flight_controller import BodyRateCommand, MockFlightController
 from simulations.simulation import ProjectAirSimSimulation
 
@@ -22,14 +25,11 @@ FLIGHT_COMMAND = BodyRateCommand(
     collective_thrust=FLIGHT_COLLECTIVE,
 )
 
-FLIGHT_DURATION_S = 5.0
 
-
-def main() -> None:
+async def main() -> None:
     flight_controller = MockFlightController()
 
     simulation = ProjectAirSimSimulation(
-        scene_config="scene_basic_drone.jsonc",
         control_hz=CONTROL_HZ,
         display_hz=5.0,
     )
@@ -96,9 +96,8 @@ def main() -> None:
         #          v
         #   simulation.step(...)
         #
-        steps = int(FLIGHT_DURATION_S * CONTROL_HZ)
-
-        for _ in range(steps):
+        while True:
+            await asyncio.sleep(1 / CONTROL_HZ)
             motor_outputs, state_estimate = flight_controller.update(
                 command=FLIGHT_COMMAND,
                 actual_state=state,
@@ -110,7 +109,9 @@ def main() -> None:
                 dt=simulation.dt,
                 display=True,
             )
-
+    except KeyboardInterrupt as e:
+        print("Ending")
+    finally:
         final_position = state_estimate["position"]
         print(
             "Finished test. Last controller state estimate: "
@@ -118,10 +119,10 @@ def main() -> None:
             f"E={final_position['y']:.3f}, "
             f"D={final_position['z']:.3f}"
         )
-
-    finally:
         simulation.close()
 
 
+
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())  # Runner for async main function
+
