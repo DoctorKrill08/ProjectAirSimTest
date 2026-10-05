@@ -1,0 +1,1 @@
+pip install projectairsim==1.0.2
