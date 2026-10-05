@@ -5,29 +5,10 @@ from typing import Any, Callable, Dict
 
 from projectairsim import Drone, ProjectAirSimClient, World
 
+import time
+
 
 class ProjectAirSimSimulation:
-    """
-    Thin Project AirSim adapter.
-
-    The rest of the project deals with generic state dictionaries and generic
-    motor names. Only this class knows Project AirSim's API and actuator IDs.
-
-    Expected project layout:
-
-        project_root/
-        ├── main.py
-        ├── flight_controller.py
-        ├── simulations/
-            └── simulation.py
-            └── sim_config/
-                ├── scene_basic_drone.jsonc
-                └── robot_quadrotor_fastphysics.jsonc
-
-    IMPORTANT:
-        The robot config must use Project AirSim's "manual-controller-api"
-        rather than "simple-flight-api" when using set_control_signals().
-    """
 
     MOTOR_TO_ACTUATOR = {
         "front_left": "Prop_FL_actuator",
@@ -41,7 +22,7 @@ class ProjectAirSimSimulation:
         scene_config: str = "scene_basic_drone.jsonc",
         drone_name: str = "Drone1",
         control_hz: float = 100.0,
-        display_hz: float = 5.0,
+        display_hz: float = 20.0,
         sim_config_path: str | Path | None = None,
     ) -> None:
         if control_hz <= 0:
@@ -51,6 +32,9 @@ class ProjectAirSimSimulation:
         self.drone_name = drone_name
         self.control_hz = float(control_hz)
         self.dt = 1.0 / self.control_hz
+
+        self.elapsed = 0
+        self.start_time = time.perf_counter()
 
         self.display_hz = float(display_hz)
         self.display_period = (
@@ -85,6 +69,9 @@ class ProjectAirSimSimulation:
 
         self.client = ProjectAirSimClient()
         self.client.connect()
+
+        self.start_time = time.perf_counter()
+        self.elapsed = 0
 
         self.world = World(
             self.client,
@@ -227,6 +214,7 @@ class ProjectAirSimSimulation:
         )
 
         state = self.get_ground_truth_state()
+        self.elapsed = self.start_time - time.perf_counter()
 
         if display:
             self._display_accumulator += dt
@@ -245,20 +233,7 @@ class ProjectAirSimSimulation:
         target_height_m: float = 1.0,
         max_duration_s: float = 3.0,
     ) -> Dict[str, Any]:
-        """
-        Simple takeoff bootstrap.
 
-        motor_supplier receives:
-            current_actual_state, dt
-
-        and returns:
-            generic four-motor output dictionary
-
-        This keeps the simulator independent of the FlightController class.
-
-        The takeoff ends once NED Z has decreased by target_height_m
-        (negative Z is upward), or when max_duration_s is reached.
-        """
         self._require_started()
 
         if target_height_m <= 0:
@@ -298,21 +273,23 @@ class ProjectAirSimSimulation:
             )
 
         return state
-
     @staticmethod
-    def print_state(state: Dict[str, Any]) -> None:
+    def state_to_string(state: Dict[str, Any]) -> None:
         position = state["position"]
         rates = state["body_rates"]
 
-        print(
-            "STATE | "
-            f"pos NED=({position['x']:+7.3f}, "
-            f"{position['y']:+7.3f}, "
-            f"{position['z']:+7.3f}) m | "
-            f"rates=({rates['x']:+6.3f}, "
-            f"{rates['y']:+6.3f}, "
+        return(
+            "STATE | " +
+            f"pos NED=({position['x']:+7.3f}, " +
+            f"{position['y']:+7.3f}, " +
+            f"{position['z']:+7.3f}) m | " +
+            f"rates=({rates['x']:+6.3f}, " +
+            f"{rates['y']:+6.3f}, " +
             f"{rates['z']:+6.3f}) rad/s"
         )
+
+    def print_state(self,state: Dict[str, Any]) -> None:
+        print(ProjectAirSimSimulation.state_to_string(state) + f" |elapsed: {self.elapsed}")
 
     def close(self):
         if not self._started:
