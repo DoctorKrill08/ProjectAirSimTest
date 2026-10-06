@@ -1,7 +1,7 @@
 from time import time
 
-from flight_controller import Action, FlightController, State
-from database import Database
+from Subsystems.flight_controller import Action, FlightController, State
+from Subsystems.database import Database
 
 
 class Drone():
@@ -11,6 +11,7 @@ class Drone():
         self.target = target
         self.flight_controller = flight_controller
         self.database = Database()
+        self.time_stamp = 0
         if self.flight_controller is None:
             raise ValueError("A flight controller must be provided.")
     def to_string(self):
@@ -20,6 +21,6 @@ class Drone():
         )
     
     def update(self, action : Action):
-        self.state,time_stamp = self.flight_controller.read()
+        self.state,self.time_stamp = self.flight_controller.read()
         self.flight_controller.send(action)
-        self.database.update_history(self.state, action, time_stamp, display = True)
+        self.database.update_history(self.state, action, self.time_stamp, display = True)

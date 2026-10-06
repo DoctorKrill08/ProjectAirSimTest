@@ -1,5 +1,8 @@
 from __future__ import annotations
-from flight_controller import FlightController, Motor, State, Action, quaternion_to_rotation_matrix
+
+from Subsystems.flight_controller import FlightController, quaternion_to_rotation_matrix
+from Subsystems.action import Action, Motor
+from Subsystems.state import State
 import numpy as np
 from pathlib import Path
 from typing import Any, Callable, Dict, override
@@ -100,7 +103,7 @@ class ProjectAirSimSimulation(FlightController):
         return state,time_stamp
     @override
     def send(self, actions: Action) -> None:
-        actions = FlightController.normalize_action(actions)
+        #super().send(actions)
         thrusts = actions.motor_thrusts
         self._require_started()
 

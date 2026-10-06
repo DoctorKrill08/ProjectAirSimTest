@@ -1,31 +1,33 @@
-import asyncio
 from enum import Enum
 import time
 import numpy as np
-from drone import Drone
+from Subsystems.drone import Drone
 
 from simulations.simulation import ProjectAirSimSimulation
-from flight_controller import FlightController, Motor, State, Action
+from Subsystems.action import Action, Motor
+from Subsystems.state import State
+
+#run with:
+# python -m tests.fly_up
 
 CONTROL_HZ = 100.0
 CONTROL_PERIOD = 1 / CONTROL_HZ
 TAKE_OFF_TIME = 3 #seconds
 
-SIMULATION_UPDATE_FREQUENCY = 50
+SIMULATION_UPDATE_FREQUENCY = 100
 SIMULATION_UPDATE_PERIOD = 1 / SIMULATION_UPDATE_FREQUENCY
-async def main() -> None:
+def main() -> None:
 
     simulation = ProjectAirSimSimulation()
-    target = State(np.array([0, 0, 10]))
+    target = State(position=np.array([0, 0, 10])) #dont worry about this yet
     drone = Drone(target=target, flight_controller=simulation)
 
     try:
-        start_time = time.perf_counter()
         simulation.start()
 
         while True:
             dt = CONTROL_PERIOD
-            await asyncio.sleep(SIMULATION_UPDATE_PERIOD)
+            time.sleep(SIMULATION_UPDATE_PERIOD)
             drone.update(
                 action = Action(
                     motor_thrusts={
@@ -46,5 +48,5 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Runner for async main function
+    main()  # Runner for main function
 
