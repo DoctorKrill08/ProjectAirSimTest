@@ -1,12 +1,14 @@
 from __future__ import annotations
-from flight_controller import FlightController, Motor, State, Action
-
+from flight_controller import FlightController, Motor, State, Action, quaternion_to_rotation_matrix
+import numpy as np
 from pathlib import Path
 from typing import Any, Callable, Dict, override
 
 from projectairsim import Drone, ProjectAirSimClient, World
 
 import time
+
+NANO_SECOND = 1_000_000_000
 
 class ProjectAirSimSimulation(FlightController):
 
@@ -18,7 +20,6 @@ class ProjectAirSimSimulation(FlightController):
     }
     SCENE = "scene_basic_drone.jsonc"
     DEFAULT_DRONE_NAME = "Drone1"
-    DISPLAY_HZ = 20.0
     SIMULATION_FOLDER = Path(__file__).resolve().parent
     SIM_CONFIG_PATH = SIMULATION_FOLDER / "sim_config"
 
@@ -37,9 +38,6 @@ class ProjectAirSimSimulation(FlightController):
 
         self.client = ProjectAirSimClient()
         self.client.connect()
-
-        self.start_time = time.perf_counter()
-        self.elapsed = 0
 
         self.world = World(
             self.client,
@@ -60,7 +58,7 @@ class ProjectAirSimSimulation(FlightController):
         self._started = True
 
     @override
-    def read(self) -> State:
+    def read(self) -> tuple[State, np.double]:
         self._require_started()
 
         assert self.drone is not None
@@ -73,32 +71,33 @@ class ProjectAirSimSimulation(FlightController):
         position = pose["position"]
         orientation = pose["orientation"]
 
+        time_stamp= np.double(kinematics.get("time_stamp", 0) / NANO_SECOND)
+
         state = State(
-            time_stamp=int(kinematics.get("time_stamp", 0)),
-            position={
-                "x": float(position["x"]),
-                "y": float(position["y"]),
-                "z": float(position["z"]),
-            },
-            rotation={
-                "w": float(orientation["w"]),
-                "x": float(orientation["x"]),
-                "y": float(orientation["y"]),
-                "z": float(orientation["z"]),
-            },
-            velocity={
-                "x": float(twist["linear"]["x"]),
-                "y": float(twist["linear"]["y"]),
-                "z": float(twist["linear"]["z"]),
-            },
-            angular_velocity={
-                "x": float(twist["angular"]["x"]),
-                "y": float(twist["angular"]["y"]),
-                "z": float(twist["angular"]["z"]),
-            }
+            rotation=quaternion_to_rotation_matrix(
+                float(orientation["w"]),
+                float(orientation["x"]),
+                float(orientation["y"]),
+                float(orientation["z"]),
+            ),
+            position=np.array([
+                float(position["x"]),
+                float(position["y"]),
+                float(position["z"]),
+            ], dtype=float),
+            velocity=np.array([
+                float(twist["linear"]["x"]),
+                float(twist["linear"]["y"]),
+                float(twist["linear"]["z"]),
+            ], dtype=float),
+            angular_velocity=np.array([
+                float(twist["angular"]["x"]),
+                float(twist["angular"]["y"]),
+                float(twist["angular"]["z"]),
+            ], dtype=float)
         )
 
-        return state
+        return state,time_stamp
     @override
     def send(self, actions: Action) -> None:
         actions = FlightController.normalize_action(actions)
@@ -126,7 +125,7 @@ class ProjectAirSimSimulation(FlightController):
 
         assert self.world is not None
 
-        delta_time_ns = max(1, int(dt * 1_000_000_000))
+        delta_time_ns = max(1, int(dt * NANO_SECOND))
         self.world.continue_for_sim_time(
             delta_time_ns,
             wait_until_complete=True,
