@@ -26,3 +26,4 @@ pip install -r requirements.txt
 
 ##What the actual requirements are:
 pip install projectairsim==1.0.2
+pip install pandas

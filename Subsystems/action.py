@@ -1,6 +1,7 @@
-from enum import Enum
+import pandas as pd
+import math
 
-class Motor(Enum):
+class Motor():
     FL = "FL",
     FR = "FR",
     BL = "BL", #Backleft
@@ -56,6 +57,57 @@ class ActionSequence():
             f"{time_stamp:+7.3f}: {action.to_string()}"
             for action, time_stamp in zip(self.actions, self.time_stamps)
         )
+
+
+    @staticmethod
+    def generate_from_csv(
+        file_path: str,
+        start_time: float = 0,
+        frequency: float | None = None
+    ) -> "ActionSequence":
+
+        df = pd.read_csv(file_path)
+        sequence = ActionSequence(frequency=frequency)
+
+        if frequency is None:
+            frequency = ActionSequence.TIME_STAMP_FREQUENCY
+
+        if frequency <= 0:
+            raise ValueError("frequency must be greater than 0")
+
+        dt = 1.0 / frequency
+        rows = list(df.itertuples(index=False))
+
+        for i, row in enumerate(rows):
+            action = Action(
+                motor_thrusts={
+                    Motor.FL: row.FL,
+                    Motor.FR: row.FR,
+                    Motor.BL: row.BL,
+                    Motor.BR: row.BR,
+                }
+            )
+            current_time = float(row.time)
+            if i + 1 < len(rows):
+                next_time = float(rows[i + 1].time)
+                num_steps = math.ceil(
+                    (next_time - current_time) * frequency
+                )
+                for step in range(num_steps):
+                    t = current_time + step * dt
+                    if t >= next_time:
+                        break
+                    sequence.append(
+                        action,
+                        start_time + t
+                    )
+            else:
+                sequence.append(
+                    action,
+                    start_time + current_time
+                )
+
+        return sequence
 
     @staticmethod
     def generate_random_sequence(time : float, frequency: float | None = None, start_time : float = 0) -> "ActionSequence":
