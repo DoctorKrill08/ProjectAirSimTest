@@ -43,5 +43,9 @@ class FlightController():
         pass
     def open(self) -> None:
         pass
+    def step(self,action: Action | None = None,
+            dt: np.double | None = None,) -> tuple[State, np.double]:
+        #Steps the flight controller and returns the current state and timestamp.
+        pass
     def close(self) -> None:
         pass

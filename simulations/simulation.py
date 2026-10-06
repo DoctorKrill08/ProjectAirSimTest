@@ -114,17 +114,21 @@ class ProjectAirSimSimulation(FlightController):
             control_signals[actuator_name] = float(thrusts[motor_name])
 
         self.drone.set_control_signals(control_signals)
-
+    @override
     def step(
         self,
-        dt: float | None = None,
-    ) -> None:
+        action: Action | None = None,
+        dt: np.double | None = None,
+    ) -> tuple[State, np.double]:
         self._require_started()
 
         if dt is None:
             raise ValueError("dt must be provided.")
         if dt <= 0:
             raise ValueError("dt must be greater than zero.")
+
+        if (action is not None):
+            self.send(actions=action)
 
         assert self.world is not None
 
@@ -133,6 +137,7 @@ class ProjectAirSimSimulation(FlightController):
             delta_time_ns,
             wait_until_complete=True,
         )
+        return self.read()
     @override
     def close(self) -> None:
         if not self._started:

@@ -2,6 +2,7 @@ from enum import Enum
 import time
 import numpy as np
 from Subsystems.drone import Drone
+import asyncio
 
 from simulations.simulation import ProjectAirSimSimulation
 from Subsystems.action import Action, Motor
@@ -14,9 +15,7 @@ CONTROL_HZ = 100.0
 CONTROL_PERIOD = 1 / CONTROL_HZ
 TAKE_OFF_TIME = 3 #seconds
 
-SIMULATION_UPDATE_FREQUENCY = 100
-SIMULATION_UPDATE_PERIOD = 1 / SIMULATION_UPDATE_FREQUENCY
-def main() -> None:
+async def main() -> None:
 
     simulation = ProjectAirSimSimulation()
     target = State(position=np.array([0, 0, 10])) #dont worry about this yet
@@ -25,10 +24,7 @@ def main() -> None:
     try:
         simulation.start()
 
-        while True:
-            dt = CONTROL_PERIOD
-            time.sleep(SIMULATION_UPDATE_PERIOD)
-            drone.update(
+        while (await drone.update(
                 action = Action(
                     motor_thrusts={
                         Motor.FL: 4.0, #Clockwise
@@ -36,10 +32,10 @@ def main() -> None:
                         Motor.BL: 4.0, #Counter-Clockwise
                         Motor.BR: 4.0, #Clockwise
                     }
-                )
-            )
-            simulation.step(dt)
-            
+                ),
+            )            
+        ):
+            pass
     except KeyboardInterrupt as e:
         print("Ending")
     finally:
@@ -48,5 +44,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()  # Runner for main function
+    asyncio.run(main())  # Runner for main function
 
