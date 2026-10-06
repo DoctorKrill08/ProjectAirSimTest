@@ -13,7 +13,14 @@ async def main() -> None:
     simulation = ProjectAirSimSimulation()
     target = State(position=np.array([0, 0, 10])) #dont worry about this yet
     drone = Drone(target=target, flight_controller=simulation)
-    action_sequence = ActionSequence.generate_from_csv("action_sequences/up_and_down.csv")
+    invalid_input = True
+    while invalid_input:
+        file = input("Name the action sequence you want the drone to perform: (ex. up_and_down.csv):\n")
+        try:
+            action_sequence = ActionSequence.generate_from_csv(f"action_sequences/{file}")
+            invalid_input = False
+        except:
+            print("Failed to load action sequence.")
     drone.action_sequence = action_sequence
     try:
         simulation.start()

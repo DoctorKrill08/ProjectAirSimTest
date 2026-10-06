@@ -8,15 +8,17 @@ class Motor():
     BR = "BR"
 
 class Action():
-    ASSUMED_MAX_THRUST : float = 4.0  # Newtons
+    ASSUMED_MAX_THRUST : float = 4.18  # Newtons
     def __init__(
             self,
             motor_thrusts: dict = {Motor.FL: 0, Motor.FR: 0, Motor.BL: 0, Motor.BR: 0},
             ):
         self.motor_thrusts = motor_thrusts #Newtons
-        for thrust in self.motor_thrusts.values():
-            if thrust < 0:
-                raise ValueError("Motor thrust cannot be negative")
+        for motor in self.motor_thrusts:
+            if self.motor_thrusts[motor] < 0:
+                self.motor_thrusts[motor] = 0
+            if self.motor_thrusts[motor] > Action.ASSUMED_MAX_THRUST:
+                self.motor_thrusts[motor] = Action.ASSUMED_MAX_THRUST
     def to_string(self):
         return (
             f"motor_thrusts=({self.motor_thrusts[Motor.FL]:+7.3f}, {self.motor_thrusts[Motor.FR]:+7.3f}, " +
