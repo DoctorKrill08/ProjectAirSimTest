@@ -22,4 +22,4 @@ class Drone():
     def update(self, action : Action):
         self.state,time_stamp = self.flight_controller.read()
         self.flight_controller.send(action)
-        self.database.update_history(self.state, action, time_stamp, True)
+        self.database.update_history(self.state, action, time_stamp, display = True)
