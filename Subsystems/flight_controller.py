@@ -34,6 +34,8 @@ def quaternion_to_rotation_matrix(w, x, y, z):
 #Generic Flight Controller Template, assuming using pyserial or something similiar
 class FlightController():
     CONTROL_HZ = 100.0
+    DATA_LOG_FREQUENCY = 20
+    DATA_LOG_PERIOD = 1.0 / DATA_LOG_FREQUENCY
     def __init__(self, log_data: bool = False) -> None:
         self.action_data = []
         self.state_data = []

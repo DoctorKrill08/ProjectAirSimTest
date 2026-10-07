@@ -67,12 +67,11 @@ class ActionSequence():
         start_time: float = 0,
         frequency: float | None = None
     ) -> "ActionSequence":
-
+        if frequency is None:
+            frequency = ActionSequence.TIME_STAMP_FREQUENCY
         df = pd.read_csv(file_path)
         sequence = ActionSequence(frequency=frequency)
 
-        if frequency is None:
-            frequency = ActionSequence.TIME_STAMP_FREQUENCY
 
         if frequency <= 0:
             raise ValueError("frequency must be greater than 0")

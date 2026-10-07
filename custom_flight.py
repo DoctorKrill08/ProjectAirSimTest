@@ -15,7 +15,7 @@ async def main() -> None:
     drone = Drone(target=target, flight_controller=simulation)
     invalid_input = True
     while invalid_input:
-        file = input("Name the action sequence you want the drone to perform: (ex. up_and_down.csv):\n")
+        file = input("Name the action sequence you want the drone to perform: (ex. temp.csv):\n")
         try:
             action_sequence = ActionSequence.generate_from_csv(f"action_sequences/{file}")
             invalid_input = False

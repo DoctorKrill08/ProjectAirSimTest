@@ -136,9 +136,10 @@ class ProjectAirSimSimulation(FlightController):
             self.send(actions=action)
         state,time_stamp = self.read()
         if self.log_data:
-            self.action_data.append(action)
-            self.state_data.append(state)
-            self.time_data.append(time_stamp)
+            if len(self.time_data) == 0 or time_stamp - self.time_data[len(self.time_data) - 1] >= self.DATA_LOG_PERIOD :
+                self.action_data.append(action)
+                self.state_data.append(state)
+                self.time_data.append(time_stamp)
 
         assert self.world is not None
 
@@ -152,7 +153,7 @@ class ProjectAirSimSimulation(FlightController):
     def close(self) -> None:
         if not self._started:
             return
-
+        self.write_data_log()
         if self.drone is not None:
             try:
                 self.drone.set_control_signals(
