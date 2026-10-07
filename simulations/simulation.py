@@ -25,15 +25,20 @@ class ProjectAirSimSimulation(FlightController):
     DEFAULT_DRONE_NAME = "Drone1"
     SIMULATION_FOLDER = Path(__file__).resolve().parent
     SIM_CONFIG_PATH = SIMULATION_FOLDER / "sim_config"
-
+    @override
     def __init__(
         self,
+        log_data: bool = False,
     ) -> None:
         self.client: ProjectAirSimClient | None = None
         self.world: World | None = None
         self.drone: Drone | None = None
 
         self._started = False
+        self.log_data = log_data
+        self.action_data = []
+        self.state_data = []
+        self.time_data = []
     @override
     def start(self) -> None:
         if self._started:
@@ -129,6 +134,11 @@ class ProjectAirSimSimulation(FlightController):
 
         if (action is not None):
             self.send(actions=action)
+        state,time_stamp = self.read()
+        if self.log_data:
+            self.action_data.append(action)
+            self.state_data.append(state)
+            self.time_data.append(time_stamp)
 
         assert self.world is not None
 
@@ -137,7 +147,7 @@ class ProjectAirSimSimulation(FlightController):
             delta_time_ns,
             wait_until_complete=True,
         )
-        return self.read()
+        return state, time_stamp
     @override
     def close(self) -> None:
         if not self._started:

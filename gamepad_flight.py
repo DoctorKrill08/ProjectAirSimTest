@@ -8,6 +8,8 @@ import numpy as np
 from simulations.simulation import ProjectAirSimSimulation
 from Subsystems.PID import PID
 
+#There is a bunch of AI Generated code here. This was used to fly around and collect data.
+
 def clamp(value, min_value, max_value):
     return max(min_value, min(max_value, value))
 
@@ -62,7 +64,7 @@ def controller_to_action(
     # Maximum commanded rotational velocities in rad/s
     MAX_ROLL_RATE = 2.0
     MAX_PITCH_RATE = 2.0
-    MAX_YAW_RATE = 1.5
+    MAX_YAW_RATE = 2.0
 
     max_thrust = Action.ASSUMED_MAX_THRUST
 
@@ -101,7 +103,7 @@ def controller_to_action(
         roll_output + pitch_output - yaw_output
     ])
 
-    required_headroom = max(0.0, np.max(corrections)) * 2
+    required_headroom = max(0.0, np.max(corrections))
 
     requested_base = throttle * max_thrust
 
@@ -141,7 +143,10 @@ def controller_to_action(
     )
 
 async def main():
-    simulation = ProjectAirSimSimulation()
+    max_time = float(input("Enter the maximum simulation time: "))
+    log_data = input("Log data? (y/n): ").strip().lower() == "y"
+
+    simulation = ProjectAirSimSimulation(log_data=log_data)
     target = State(position=np.array([0, 0, 10])) #dont worry about this yet
     drone = Drone(target=target, flight_controller=simulation)
     gamepad = Gamepad()
@@ -156,30 +161,30 @@ async def main():
         simulation.start()
 
         roll_pid = PID(
-            kp=-0.8,
+            kp=-0.13,
             ki=0,
-            kd=-0.001,
+            kd=-0.000,
             output_limit=Action.ASSUMED_MAX_THRUST,
             integral_limit=1.0
         )
 
         pitch_pid = PID(
-            kp=-0.8,
+            kp=-0.25,
             ki=0,
-            kd=-0.001,
+            kd=0.000,
             output_limit=Action.ASSUMED_MAX_THRUST,
             integral_limit=1.0
         )
 
         yaw_pid = PID(
-            kp=4,
+            kp=1,
             ki=0.00,
             kd=0.0,
             output_limit=Action.ASSUMED_MAX_THRUST,
             integral_limit=1.0
         )
 
-        while (drone.time_stamp < 30):
+        while (drone.time_stamp < max_time):
             throttle = gamepad.get_joystick(Gamepad.Inputs.LEFT_Y)
             roll     = gamepad.get_joystick(Gamepad.Inputs.LEFT_X)
             pitch    = gamepad.get_joystick(Gamepad.Inputs.RIGHT_Y) * -1
