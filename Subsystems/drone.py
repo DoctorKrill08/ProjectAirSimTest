@@ -8,7 +8,6 @@ from Subsystems.database import Database
 
 
 class Drone():
-    CONTROL_HZ = 100.0
     def __init__(self, target : State | None = None, flight_controller: FlightController | None = None, action_sequence : ActionSequence | None = None):
         self.state = State(0)
         self.target = target
@@ -24,12 +23,12 @@ class Drone():
             f"target=({self.target.to_string() if self.target else 'None'})"
         )
     
-    async def update(self, action : Action | None = None, dt : np.double = 1.0/CONTROL_HZ, display: bool = True) -> bool:
-        await asyncio.sleep(dt)
+    async def update(self, action : Action | None = None, display: bool = True) -> bool:
+        await asyncio.sleep(FlightController.CONTROL_PERIOD)
         if action is None and self.action_sequence is not None:
             action = self.action_sequence.get_action(self.time_stamp)
         if (action is None):
             return False
-        self.state,self.time_stamp = self.flight_controller.step(action=action, dt=dt)
+        self.state,self.time_stamp = self.flight_controller.step(action=action)
         self.database.update_history(self.state, action, self.time_stamp, display = display)
         return True

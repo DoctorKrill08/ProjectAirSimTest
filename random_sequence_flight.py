@@ -38,8 +38,6 @@ async def main() -> None:
         while (await drone.update()):
             pass
             
-    except KeyboardInterrupt as e:
-        print("Ending")
     finally:
         simulation.close()
 

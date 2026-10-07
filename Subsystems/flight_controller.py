@@ -34,29 +34,35 @@ def quaternion_to_rotation_matrix(w, x, y, z):
 #Generic Flight Controller Template, assuming using pyserial or something similiar
 class FlightController():
     CONTROL_HZ = 100.0
-    DATA_LOG_FREQUENCY = 20
-    DATA_LOG_PERIOD = 1.0 / DATA_LOG_FREQUENCY
-    def __init__(self, log_data: bool = False) -> None:
+    CONTROL_PERIOD = np.double(1.0 / CONTROL_HZ)
+    NANO_SECOND = 1_000_000_000
+    CONTROL_NS = int(NANO_SECOND / CONTROL_HZ)
+    DATA_PATH = "state_actions_sequences/"
+    def __init__(self) -> None:
         self.action_data = []
         self.state_data = []
         self.time_data = []
-        self.log_data = log_data
+        self.log_data = False
+        self.data_name = FlightController.DATA_PATH + "temp.csv"
+        self.iteration = 0
+    def start(self) -> None:
         pass
+    def log_prompt(self) -> None:
+        self.log_data = input("Do you want to log data? (y/n): ").strip().lower() == "y"
+        if (self.log_data):
+            self.data_name = input("Name the data log file: (ex. temp.csv):\n")
+            self.data_name = FlightController.DATA_PATH + self.data_name
     def send(self,action : Action) -> None:
-        action.normalize()
         pass
     def read(self) -> tuple[State, float]:
         #Returns the current state and the timestamp.
         pass
-    def open(self) -> None:
-        pass
-    def step(self,action: Action | None = None,
-            dt: np.double | None = None) -> tuple[State, np.double]:
+    def step(self,action: Action | None = None) -> tuple[State, np.double]:
         #Steps the flight controller and returns the current state and timestamp.
         pass
     def close(self) -> None:
         pass
-    def write_data_log(self, file_path: str = "state_actions_sequences/temp.csv"):
+    def write_data_log(self):
         if not self.log_data:
             return
         """
@@ -70,17 +76,17 @@ class FlightController():
              motor_thrusts: dict = {Motor.FL: 0, Motor.FR: 0, Motor.BL: 0, Motor.BR: 0},
         """
         header = [
-        "time",
-        "FL", "FR", "BL", "BR",
-        "x", "y", "z",
-        "vx", "vy", "vz",
-        "r1x", "r1y", "r1z",
-        "r2x", "r2y", "r2z",
-        "r3x", "r3y", "r3z",
-        "wx", "wy", "wz"
-    ]
+            "time",
+            "FL", "FR", "BL", "BR",
+            "x", "y", "z",
+            "vx", "vy", "vz",
+            "r1x", "r1y", "r1z",
+            "r2x", "r2y", "r2z",
+            "r3x", "r3y", "r3z",
+            "wx", "wy", "wz"
+        ]
 
-        with open(file_path, "w", newline="") as file:
+        with open(self.data_name, "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerow(header)
 

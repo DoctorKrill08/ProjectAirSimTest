@@ -144,9 +144,8 @@ def controller_to_action(
 
 async def main():
     max_time = float(input("Enter the maximum simulation time: "))
-    log_data = input("Log data? (y/n): ").strip().lower() == "y"
-
-    simulation = ProjectAirSimSimulation(log_data=log_data)
+    simulation = ProjectAirSimSimulation()
+    simulation.log_prompt()
     target = State(position=np.array([0, 0, 10])) #dont worry about this yet
     drone = Drone(target=target, flight_controller=simulation)
     gamepad = Gamepad()
@@ -184,7 +183,7 @@ async def main():
             integral_limit=1.0
         )
 
-        while (drone.time_stamp < max_time):
+        while (drone.time_stamp < max_time and gamepad.connected):
             throttle = gamepad.get_joystick(Gamepad.Inputs.LEFT_Y)
             roll     = gamepad.get_joystick(Gamepad.Inputs.LEFT_X)
             pitch    = gamepad.get_joystick(Gamepad.Inputs.RIGHT_Y) * -1
@@ -201,22 +200,19 @@ async def main():
                 pitch = 0.0
             if abs(yaw) < THRESHOLD:
                 yaw = 0.0
-            dt = 1 / drone.CONTROL_HZ
             action = controller_to_action(
                 throttle,
                 roll,
                 pitch,
                 yaw,
                 drone.state.angular_velocity,
-                dt,
+                drone.flight_controller.CONTROL_PERIOD,
                 roll_pid,
                 pitch_pid,
                 yaw_pid
             )
             
             await drone.update(action = action,display=False)
-    except KeyboardInterrupt as e:
-            print("Ending")
     finally:
         simulation.close()
     

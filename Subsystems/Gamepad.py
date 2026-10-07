@@ -26,6 +26,7 @@ class Gamepad:
         self._axes = {}
         self._lock = threading.Lock()
         self._running = True
+        self.connected = False
 
         self._thread = threading.Thread(
             target=self._read_loop,
@@ -37,6 +38,7 @@ class Gamepad:
         while self._running:
             try:
                 events = get_gamepad()  # Blocks until controller events occur
+                self.connected = True
 
                 for event in events:
                     with self._lock:
@@ -48,6 +50,9 @@ class Gamepad:
 
             except Exception as e:
                 print(f"Gamepad error: {e}")
+                self._buttons.clear()
+                self._axes.clear()
+                self.stop()
 
     def get_button(self, button: str) -> bool :
         code = getattr(Gamepad.Inputs, button.upper(), button)
@@ -66,4 +71,6 @@ class Gamepad:
 
     def stop(self):
         self._running = False
-        self._thread.join()
+        if (self.connected):
+            self._thread.join()
+        self.connected = False
