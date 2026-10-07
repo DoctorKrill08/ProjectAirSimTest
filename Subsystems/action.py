@@ -1,6 +1,9 @@
+import os
+
 import pandas as pd
 import math
 import numpy as np
+import random
 
 class Motor():
     FL = "FL"
@@ -32,11 +35,11 @@ class Action():
         return thrusts
 
 class ActionSequence():
-    DEFAULT_FREQUENCY = 100
-    def __init__(self, frequency: float | None = None) -> None:
+    CONTROL_FREQUENCY = 100
+    ACTION_SEQUENCE_FOLDER: str = "action_sequences"
+    def __init__(self) -> None:
         self.actions: list[Action] = []
         self.time_stamps: list[float] = []
-        self.frequency = frequency if frequency is not None else ActionSequence.DEFAULT_FREQUENCY
 
     def append(self, action: Action, time_stamp: float) -> None:
         self.actions.append(action)
@@ -50,99 +53,106 @@ class ActionSequence():
     def get_action(self, time_stamp: float) -> Action | None:
         if not self.time_stamps:
             return None
-        start_time = self.time_stamps[0] if self.time_stamps else 0
-        length : int = len(self.time_stamps)
-        index : int = int((time_stamp - start_time) * self.frequency)
 
-        if index <= length - 1:
+        start_time = self.time_stamps[0]
+        index = round((time_stamp - start_time) * ActionSequence.CONTROL_FREQUENCY)
+
+        if 0 <= index < len(self.actions):
             return self.actions[index]
-        return None
-    def to_string(self) -> str:
-        return "\n".join(
-            f"{time_stamp:+7.3f}: {action.to_string()}"
-            for action, time_stamp in zip(self.actions, self.time_stamps)
-        )
 
+        return None
 
     @staticmethod
     def generate_from_csv(
-        file_path: str,
+        file_name: str | None = None,
         start_time: float = 0,
-        frequency: float | None = None
     ) -> "ActionSequence":
-        if frequency is None:
-            frequency = ActionSequence.DEFAULT_FREQUENCY
-        df = pd.read_csv(file_path)
-        sequence = ActionSequence(frequency=frequency)
 
+        if file_name is None:
+            file_name = input("Enter the action sequence file name (ex. gamepad_flight1.csv): \n")
+        file_path = os.path.join(ActionSequence.ACTION_SEQUENCE_FOLDER, file_name)
+        df = pd.read_csv(file_path)
+
+        sequence = ActionSequence()
+
+        dt = 1.0 / ActionSequence.CONTROL_FREQUENCY
+
+        for i, row in enumerate(df.itertuples(index=False)):
+
+            action = Action(
+                motor_thrusts={
+                    Motor.FL: float(row.FL),
+                    Motor.FR: float(row.FR),
+                    Motor.BL: float(row.BL),
+                    Motor.BR: float(row.BR),
+                }
+            )
+
+            sequence.append(
+                action,
+                start_time + i * dt
+            )
+
+        return sequence
+
+    @staticmethod
+    def generate_random_sequence(
+        time: float,
+        frequency: float,
+        start_time: float = 0
+    ) -> "ActionSequence":
 
         if frequency <= 0:
             raise ValueError("frequency must be greater than 0")
 
-        dt = np.double(1.0 / frequency)
-        rows = list(df.itertuples(index=False))
-
-        for i, row in enumerate(rows):
-            action = Action(
-                motor_thrusts={
-                    Motor.FL: row.FL,
-                    Motor.FR: row.FR,
-                    Motor.BL: row.BL,
-                    Motor.BR: row.BR,
-                }
+        if frequency > ActionSequence.CONTROL_FREQUENCY:
+            raise ValueError(
+                "frequency cannot be greater than CONTROL_FREQUENCY"
             )
-            current_time = float(row.time)
-            if i + 1 < len(rows):
-                next_time = float(rows[i + 1].time)
-                num_steps = math.ceil(
-                    (next_time - current_time) * frequency
-                )
-                for step in range(num_steps):
-                    t = current_time + step * dt
-                    if t >= next_time:
-                        break
-                    sequence.append(
-                        action,
-                        start_time + t
-                    )
-            else:
-                sequence.append(
-                    action,
-                    start_time + current_time
-                )
 
-        return sequence
+        sequence = ActionSequence()
 
-    @staticmethod
-    def generate_random_sequence(time : float, frequency: float | None = None, start_time : float = 0) -> "ActionSequence":
-        import random
-        sequence = ActionSequence(frequency=frequency)
-        steps = int(time * sequence.frequency)
+        control_frequency = ActionSequence.CONTROL_FREQUENCY
+        steps = int(time * control_frequency)
+
+        current_action: Action | None = None
+        previous_change_index = -1
+
         for i in range(steps):
-            action = Action(
-                motor_thrusts={
-                    Motor.FL: random.uniform(0, Action.ASSUMED_MAX_THRUST),
-                    Motor.FR: random.uniform(0, Action.ASSUMED_MAX_THRUST),
-                    Motor.BL: random.uniform(0, Action.ASSUMED_MAX_THRUST),
-                    Motor.BR: random.uniform(0, Action.ASSUMED_MAX_THRUST),
-                }
+
+            # Which random-action interval are we currently in?
+            change_index = int(i * frequency / control_frequency)
+
+            # Generate a new action only when entering a new interval
+            if change_index != previous_change_index:
+                current_action = Action(
+                    motor_thrusts={
+                        Motor.FL: random.uniform(
+                            0, Action.ASSUMED_MAX_THRUST
+                        ),
+                        Motor.FR: random.uniform(
+                            0, Action.ASSUMED_MAX_THRUST
+                        ),
+                        Motor.BL: random.uniform(
+                            0, Action.ASSUMED_MAX_THRUST
+                        ),
+                        Motor.BR: random.uniform(
+                            0, Action.ASSUMED_MAX_THRUST
+                        ),
+                    }
+                )
+
+                previous_change_index = change_index
+
+            assert current_action is not None
+
+            time_stamp = start_time + (
+                i / control_frequency
             )
-            time_stamp = start_time + (i / sequence.frequency)
-            sequence.append(action, time_stamp)
-        return sequence
-    @staticmethod
-    def fly_up(time : float, frequency: float | None = None, start_time : float = 0) -> "ActionSequence":
-        sequence = ActionSequence(frequency=frequency)
-        steps = int(time * sequence.frequency)
-        for i in range(steps):
-            action = Action(
-                motor_thrusts={
-                    Motor.FL: Action.ASSUMED_MAX_THRUST,
-                    Motor.FR: Action.ASSUMED_MAX_THRUST,
-                    Motor.BL: Action.ASSUMED_MAX_THRUST,
-                    Motor.BR: Action.ASSUMED_MAX_THRUST,
-                }
+
+            sequence.append(
+                current_action,
+                time_stamp
             )
-            time_stamp = start_time + (i / sequence.frequency)
-            sequence.append(action, time_stamp)
+
         return sequence

@@ -36,15 +36,16 @@ class FlightController():
     CONTROL_HZ = 100.0
     CONTROL_PERIOD = np.double(1.0 / CONTROL_HZ)
     NANO_SECOND = 1_000_000_000
+    MILLI_SECOND = 1_000_000
     CONTROL_NS = int(NANO_SECOND / CONTROL_HZ)
-    DATA_PATH = "state_actions_sequences/"
+    CONTROL_STEPS_PER_MILLISECOND : int = CONTROL_NS // MILLI_SECOND
+    DATA_PATH = "flight_logs/"
     def __init__(self) -> None:
         self.action_data = []
         self.state_data = []
         self.time_data = []
         self.log_data = False
         self.data_name = FlightController.DATA_PATH + "temp.csv"
-        self.iteration = 0
     def start(self) -> None:
         pass
     def log_prompt(self) -> None:

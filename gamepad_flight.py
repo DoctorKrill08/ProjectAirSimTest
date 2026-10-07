@@ -163,7 +163,7 @@ async def main():
             kp=-0.13,
             ki=0,
             kd=-0.000,
-            output_limit=Action.ASSUMED_MAX_THRUST,
+            output_limit=2,
             integral_limit=1.0
         )
 
@@ -171,7 +171,7 @@ async def main():
             kp=-0.25,
             ki=0,
             kd=0.000,
-            output_limit=Action.ASSUMED_MAX_THRUST,
+            output_limit=2,
             integral_limit=1.0
         )
 
@@ -179,7 +179,7 @@ async def main():
             kp=1,
             ki=0.00,
             kd=0.0,
-            output_limit=Action.ASSUMED_MAX_THRUST,
+            output_limit=2,
             integral_limit=1.0
         )
 
@@ -188,7 +188,7 @@ async def main():
             roll     = gamepad.get_joystick(Gamepad.Inputs.LEFT_X)
             pitch    = gamepad.get_joystick(Gamepad.Inputs.RIGHT_Y) * -1
             yaw      = gamepad.get_joystick(Gamepad.Inputs.RIGHT_X)
-            THRESHOLD = 0.1
+            THRESHOLD = 0.2
 
 
             # Apply deadzone threshold

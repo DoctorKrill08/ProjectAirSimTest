@@ -13,7 +13,7 @@
   ],
   "clock": {
     "type": "steppable",
-    "step-ns": 3000000,
+    "step-ns": 1000000,
     "real-time-update-rate": 3000000,
     "pause-on-start": true
   },

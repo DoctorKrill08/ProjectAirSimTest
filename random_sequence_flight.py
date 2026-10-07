@@ -11,20 +11,18 @@ from Subsystems.state import State
 #run with:
 # python -m tests.fly_up
 
-TAKE_OFF_TIME = 3 #seconds
-
 RANDOM_ACTION_FREQUENCY = 20
 RANDOM_ACTION_LENGTH = 3  # seconds
 async def main() -> None:
-
     simulation = ProjectAirSimSimulation()
+    simulation.log_prompt()
     target = State(position=np.array([0, 0, 10])) #dont worry about this yet
     drone = Drone(target=target, flight_controller=simulation)
-
+    
     try:
         simulation.start()
-        hover_sequence = ActionSequence.fly_up(time = TAKE_OFF_TIME)
-        drone.action_sequence = hover_sequence
+        takeoff = ActionSequence.generate_from_csv("takeoff.csv")
+        drone.action_sequence = takeoff
         while (await drone.update()):
             pass
 

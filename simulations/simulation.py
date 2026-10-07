@@ -63,7 +63,7 @@ class ProjectAirSimSimulation(FlightController):
         position = pose["position"]
         orientation = pose["orientation"]
 
-        time_stamp= self.iteration / FlightController.CONTROL_HZ
+        time_stamp= self.world.get_sim_time() / FlightController.NANO_SECOND
 
         state = State(
             rotation=quaternion_to_rotation_matrix(
@@ -111,8 +111,8 @@ class ProjectAirSimSimulation(FlightController):
 
         if (action is not None):
             self.send(actions=action)
-        self.world.continue_for_sim_time(
-            FlightController.CONTROL_NS,
+        self.world.continue_for_n_steps(
+            FlightController.CONTROL_STEPS_PER_MILLISECOND,
             wait_until_complete=True,
         )
         state,time_stamp = self.read()
@@ -120,7 +120,6 @@ class ProjectAirSimSimulation(FlightController):
             self.action_data.append(action)
             self.state_data.append(state)
             self.time_data.append(time_stamp)
-        self.iteration += 1
         return state, time_stamp
     @override
     def close(self) -> None:
